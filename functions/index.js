@@ -46,8 +46,9 @@ exports.gitlabautopull = functions.https.onRequest((request, response) => {
         "upload_date":nowtime
     };
     
-    var branchname = md5hex(obj.branch);
-    firebase.database().ref('project_state').child(obj.project_name).child(branchname).set(obj);
+    //Project Id : Project Name : Branch Path
+    var md5ProjectId = md5hex(obj.project_name + ":" +obj.branch);
+    firebase.database().ref('project_state').child(md5ProjectId).set(obj);
 
     var firebasekey = firebase.database().ref('history').push().key;
     firebase.database().ref('history').child(firebasekey).set(obj);
