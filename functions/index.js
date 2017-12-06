@@ -43,7 +43,8 @@ exports.gitlabautopull = functions.https.onRequest((request, response) => {
         "project_name": body.repository.name,
         "git_url":body.repository.git_http_url,
         "user":body.user_name,
-        "upload_date":nowtime
+        "upload_date":nowtime,
+        "message":body.commits[0].message
     };
     
     //Project Id : Project Name : Branch Path

@@ -1,5 +1,7 @@
 require('dotenv').config();
 const fileconfig = process.env;
+const LineworksBot = require("./common/lineworksbot");
+const lineworksBot = new LineworksBot();
 const fs = require('fs');
 const exec = require('child_process').exec;
 const firebase = require('firebase');
@@ -52,4 +54,31 @@ firebase.database().ref('project_state').orderByChild('is_push').equalTo(true).o
   
   //Change Firebase DataBase State
   firebase.database().ref('project_state').child(firebasekey).child('is_push').set(false);
+
+  //Send Message to user by Lineworks
+  firebase.database().ref('lineworks').once("value",snaponce =>{
+    var lineworksObj = snaponce.val();
+    if(!lineworksObj){
+      return ;
+    }
+
+    var sendListObjs = lineworksObj.sendlist;
+
+    var lineworksMsg="Azest GitLabにPushされました."+"\n\n"
+                      +"Project Name: "+gitlabObj.project_name+"\n"
+                      +"Branch: "+branch+"\n"
+                      +"User: "+gitlabObj.user+"\n"
+                      +"Message:\n"+gitlabObj.message+"\n"
+                      +gitlabObj.git_url+"\n";
+  
+    for (const key in sendListObjs) {
+      if (sendListObjs.hasOwnProperty(key)) {
+        const element = sendListObjs[key];
+        lineworksBot.sendMessage(lineworksObj.botnum,element,lineworksMsg);
+      }
+    }
+  });
+
+
+
 });
