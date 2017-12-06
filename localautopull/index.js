@@ -15,6 +15,7 @@ firebase.initializeApp(config);
 
 var isFirstRun = true;
 console.log("GitLab Auto Pull is running...");
+exec("git config --global http.sslVerify false");
 
 firebase.database().ref('project_state').orderByChild('is_push').equalTo(true).on('value',function(snip){
   
