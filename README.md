@@ -1,87 +1,135 @@
 # Gitlab 自動バックアップ(Pull)
 
-One Paragraph of project description goes here
+Gitサーバのバックアップ問題を解決するため、当プロジェクトが作られました。
 
-## Getting Started
+1. DeveloperからGitサーバ(GitLab)にPUSHします。
+1. GitLabのWebhook機能を使って、PUSHされたらFirebase Functionsで作ったWebAPIにPUSH情報を送信し、Firebase FunctionsのWebAPIからFirebase DatabaseにPUSH情報を更新します。
+1. Firebase Databaseの自動感知の特性を利用し、PUSH情報を更新されたら、バックアップ用サーバにてPULLコマンドを実行します。
+1. バックアップサーバがPULLコマンドを実行後、Developerに更新済みのメッセージをLineworksで送信します。
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-### Prerequisites
 
-What things you need to install the software and how to install them
+# システム設定
 
-```
-Give examples
-```
+当システムでは、**GitLab**と**Firebase**のアカウントが必須となります。
+* [GitLab](https://bitnami.com/stack/gitlab) : Bitnami+GCPで簡単にGitlabサーバが建てられます。
+* [Firebase](https://firebase.google.com) : Realtime Database と Cloud Functionsを使います。
+* [Lineworks](https://www.azest.co.jp/lineworks) : 最大30日間のお試しできます。
 
-### Installing
 
-A step by step series of examples that tell you have to get a development env running
+## 1.Firebase Projectを作成し、Realtime Databaseを設定
 
-Say what the step will be
+### 1.Realtime Databaseのアクセスルールを修正
 
-```
-Give the example
-```
+当プロジェクトを素早く動かすために、Realtime Databaseのアクセスルール制限を一時的に外します。
+セキュリティ面の配慮をしたいとき、まだRealtime Databaseのアクセスルールを設定してください。
 
-And repeat
+設定方法は下図にご参考ください。
 
-```
-until finished
-```
+~~~json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+~~~
 
-End with an example of getting some data out of the system or using it for a little demo
+### 2. **(非必須)** Lineworks通知機能を使いたい場合
 
-## Running the tests
+Lineworks通知機能を使いたい場合、Firebase Realtime Databaseにて下記の形のデータを追加してください。
 
-Explain how to run the automated tests for this system
+~~~json
+{
+  "lineworks" : {
+    "botnum" : 1323,
+    "sendlist" : {
+      "tan" : "tan@azest.biz"
+    }
+  }
+}
+~~~
 
-### Break down into end to end tests
+* lineworks : Lineworks機能を起動するため 
+* botnum : LinewroksのBotID
+* sendlist : 送信者リスト(複数人可)　[{key(任意):lineworks account id},{key(任意2):lineworks account id2}]
 
-Explain what these tests test and why
+## 2.社内バックアップサーバで当プロジェクトを起動
 
-```
-Give an example
-```
+※下記の例文コマンドはUbuntu 17.10 64bit環境で実行されました。
 
-### And coding style tests
+### **1.Install**
 
-Explain what these tests test and why
+> 1.node.js最新版 
 
-```
-Give an example
-```
+~~~Bash
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install -y vim curl
+curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
+sudo apt-get install -y nodejs
+~~~
 
-## Deployment
+> 2.Firebase CLI 
 
-Add additional notes about how to deploy this on a live system
+~~~Bash
+sudo npm install -g firebase-tools
+~~~
 
-## Built With
+### **2. .env配置ファイルを設定**
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+> フォルダfunctionsにある配置ファイル「readme.env」のファイル名を「.env」に修正してください。  
+> そして、下図のようにFireworks認証データを入力してください。
 
-## Contributing
+### **3.Firebase Functionsをデプロイ**
+> 参考サイト: https://firebase.google.com/docs/functions/get-started?hl=ja  
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+> 下記のコマンドを実行してください。
 
-## Versioning
+~~~Bash
+firebase login
+firebase init functions
+firebase depoly --only functions:gitlabautopull
+~~~
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+> そしてWebAPIのURLが発行されるので、そのURLを記録しておきましょう。
 
-## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+### **4.バックアップサーバ用アプリケーションを設定**
+> フォルダlocalautopullにある配置ファイル「readme.env」のファイル名を「.env」に修正してください。  
+> そして、下図のようにFireworks認証データを入力してください。
 
-## License
+>Local Forlder Infomation と Lineworks Infomationの記入例  
+~~~Bash
+#Local Forlder Infomation
+localForlderPath    ="/home/azest/gitlab_bakup/git.azest.co.jp/"
+gitlabAccount       ="pengfei"
+gitlabPassword      ="mypassword"
+#Lineworks Infomation
+API_ID              ="jpsdifjewer"
+CONSUMER_KEY        ="_g0djdjwkejwekjhweke"
+TOKEN               ="AAAAAAAAAASSSSSSSSSSDDDDDDDDDDDASDAS#$"
+~~~
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+### **5.バックアップサーバ用アプリケーションを実行**
+> localautopullフォルダに中にアクセスしてください。
 
-## Acknowledgments
+~~~Bash
+cd localautopull
+npm install
+node index.js
+~~~
 
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
+> バックグラウンドで実行したい場合、ツールForeverがおすすめです。
+https://www.npmjs.com/package/forever
+
+~~~Bash
+cd localautopull
+sudo npm install forever -g
+forever start index.js
+~~~
+
+## 3.GitlabのProject設定にて、Webhookを設定
+
+下図のように、GitlabのProject設定にて、Webhookを設定してください。  
