@@ -56,6 +56,12 @@ firebase.database().ref('project_state').orderByChild('is_push').equalTo(true).o
   firebase.database().ref('project_state').child(firebasekey).child('is_push').set(false);
 
   //Send Message to user by Lineworks
+  if(!fileconfig.API_ID       || fileconfig.API_ID ==="" ||
+     !fileconfig.CONSUMER_KEY || fileconfig.CONSUMER_KEY ==="" ||
+     !fileconfig.TOKEN        || fileconfig.TOKEN ==="" ){
+    return;
+  }
+  //Load Sendlist From Firebase Database
   firebase.database().ref('lineworks').once("value",snaponce =>{
     var lineworksObj = snaponce.val();
     if(!lineworksObj){
@@ -78,7 +84,5 @@ firebase.database().ref('project_state').orderByChild('is_push').equalTo(true).o
       }
     }
   });
-
-
 
 });
