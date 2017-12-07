@@ -96,8 +96,8 @@ sudo npm install -g firebase-tools
 
 ~~~Bash
 firebase login
-firebase init functions
-firebase depoly --only functions:gitlabautopull
+firebase init
+firebase deploy --only functions:gitlabautopull
 ~~~
 
 > そしてWebAPIのURLが発行されるので、そのURLを記録しておきましょう。
