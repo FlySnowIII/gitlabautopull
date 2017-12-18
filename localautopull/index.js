@@ -46,7 +46,7 @@ firebase.database().ref('project_state').orderByChild('is_push').equalTo(true).o
   }
   else{//git clone
     exec("mkdir " + projectPath + " -p");
-    execCommand = "git clone https://" +fileconfig.gitlabAccount +":"+fileconfig.gitlabPassword+"@"+ gitPath + " " +projectPath;
+    execCommand = "git clone -b "+ branch +" https://" +fileconfig.gitlabAccount +":"+fileconfig.gitlabPassword+"@"+ gitPath + " " +projectPath;
     console.log("Git Clone");
     console.log("Exec Command: ",execCommand);
   }
